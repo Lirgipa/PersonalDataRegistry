@@ -11,16 +11,19 @@ public class RelatedPersonConfiguration : IEntityTypeConfiguration<RelatedPerson
     public void Configure(EntityTypeBuilder<RelatedPerson> builder)
     {
         builder.HasKey(rp => rp.Id);
-        
+
+        builder.HasIndex(index => new { index.PersonId, index.RelatedPersonId })
+            .IsUnique();
+
         builder.Property(rp => rp.RelationshipType)
             .HasConversion(new EnumToStringConverter<RelationshipType>())
             .IsRequired();
-        
+
         builder.HasOne(rp => rp.Person)
             .WithMany(p => p.RelatedPersons)
             .HasForeignKey(rp => rp.PersonId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         builder.HasOne(rp => rp.RelatedToPerson)
             .WithMany()
             .HasForeignKey(rp => rp.RelatedPersonId)

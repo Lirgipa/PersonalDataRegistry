@@ -15,7 +15,7 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.Property(p => p.Gender)
             .HasConversion(new EnumToStringConverter<Gender>())
             .IsRequired();
-
+        
         builder.HasIndex(p => p.PersonalNumber)
             .IsUnique()
             .HasDatabaseName("IX_Person_PersonalNumber");

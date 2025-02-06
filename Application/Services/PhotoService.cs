@@ -39,14 +39,11 @@ public class PhotoService : IPhotoService
         }
 
         person.PhotoPath = $"/uploads/{fileName}";
-        _personRepository.Update(person);
-        await _unitOfWork.TryCommitAsync(() => Task.CompletedTask);
+        await _unitOfWork.TryCommitAsync(async () =>
+        {
+            await _personRepository.UpdateAsync(person);
+        });
 
         return person.PhotoPath;
-    }
-
-    public Task<string?> GetPhotoPathAsync(int personId)
-    {
-        throw new NotImplementedException();
     }
 }

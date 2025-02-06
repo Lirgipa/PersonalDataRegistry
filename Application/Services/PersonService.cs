@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PersonalDataDirectory.Application.Interfaces;
 using PersonalDataDirectory.Domain.Entities;
+using PersonalDataDirectory.Domain.Enums;
 using PersonalDataDirectory.Dto.Person;
 using PersonalDataDirectory.Dtos.Person;
 using PersonalDataDirectory.Extensions.Mapping;
@@ -28,28 +29,29 @@ public class PersonService : IPersonService
 
         if (personalNumberExists)
             throw new ArgumentException($"Person with personal number {dto.PersonalNumber} already exists");
-        
+
         var person = dto.ToEntity();
 
         if (!person.IsAdult())
             throw new ArgumentException("Person must be at least 18 years old.");
 
-        foreach (var relatedPerson in person.RelatedPersons)
+        var uniqueRelatedPersons = new HashSet<(int relatedId, RelationshipType type)>();
+
+        foreach (var relatedPerson in person.RelatedPersons.ToList())
         {
             var existingPerson = await _personRepository.GetByIdAsync(relatedPerson.RelatedPersonId);
             if (existingPerson is null)
                 throw new ArgumentException($"Related person with ID {relatedPerson.RelatedPersonId} does not exist.");
+
+            var relationshipKey = (relatedPerson.RelatedPersonId, relatedPerson.RelationshipType);
+            if (!uniqueRelatedPersons.Add(relationshipKey))
+            {
+                person.RelatedPersons.Remove(relatedPerson);
+            }
         }
 
-        try
-        {
-            await _unitOfWork.TryCommitAsync(async () => { await _personRepository.AddAsync(person); });
-        }
-        catch (DbUpdateException e)
-        {
-            _logger.LogCritical(e, "Could not save record in db");
-            throw;
-        }
+
+        await _unitOfWork.TryCommitAsync(async () => { await _personRepository.AddAsync(person); });
 
         return person.Id;
     }
@@ -60,16 +62,17 @@ public class PersonService : IPersonService
 
         if (existingPerson is null)
             throw new KeyNotFoundException($"Cannot update: Person with ID {id} does not exist.");
-        
+
         if (!existingPerson.IsAdult())
             throw new InvalidOperationException("Person must be at least 18 years old.");
-        
+
         if (await _personRepository.ExistsByPersonalNumberAsync(dto.PersonalNumber) &&
             existingPerson.PersonalNumber != dto.PersonalNumber)
         {
-            throw new InvalidOperationException($"A person with this personal number {dto.PersonalNumber} already exists.");
+            throw new InvalidOperationException(
+                $"A person with this personal number {dto.PersonalNumber} already exists.");
         }
-        
+
         existingPerson.FirstName = dto.FirstName;
         existingPerson.LastName = dto.LastName;
         existingPerson.Gender = dto.Gender;
@@ -86,7 +89,7 @@ public class PersonService : IPersonService
                 Number = p.Number
             }));
         }
-        
+
         await _unitOfWork.TryCommitAsync(() => Task.CompletedTask);
     }
 

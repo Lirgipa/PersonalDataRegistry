@@ -25,10 +25,7 @@ public class PersonService : IPersonService
 
     public async Task<int> CreateAsync(CreatePersonDto dto)
     {
-        var personalNumberExists = await _personRepository.ExistsByPersonalNumberAsync(dto.PersonalNumber);
-
-        if (personalNumberExists)
-            throw new ArgumentException($"Person with personal number {dto.PersonalNumber} already exists");
+        var personalNumberExistsTask = _personRepository.ExistsByPersonalNumberAsync(dto.PersonalNumber);
 
         var person = dto.ToEntity();
 
@@ -50,8 +47,13 @@ public class PersonService : IPersonService
             }
         }
 
+        await _unitOfWork.TryCommitAsync(async () =>
+        {
+            if (await personalNumberExistsTask)
+                throw new ArgumentException($"Person with personal number {dto.PersonalNumber} already exists");
 
-        await _unitOfWork.TryCommitAsync(async () => { await _personRepository.AddAsync(person); });
+            await _personRepository.AddAsync(person);
+        });
 
         return person.Id;
     }

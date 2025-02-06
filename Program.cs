@@ -3,13 +3,9 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-using PersonalDataDirectory.Application.Interfaces;
-using PersonalDataDirectory.Application.Services;
 using PersonalDataDirectory.Extensions;
 using PersonalDataDirectory.Infrastructure.Data;
 using PersonalDataDirectory.Infrastructure.Middleware;
-using PersonalDataDirectory.Infrastructure.Repositories;
-using PersonalDataDirectory.Infrastructure.UnitOfWork;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -39,10 +39,11 @@ public class RelationshipService : IRelationshipService
             RelatedToPerson = relatedPerson
         });
 
-        _personRepository.Update(person);
-        
-        //todo come up with updateAsync implementation
-        await _unitOfWork.TryCommitAsync(() => Task.CompletedTask);
+
+        await _unitOfWork.TryCommitAsync(async () =>
+        {
+            await _personRepository.UpdateAsync(person);
+        });
     }
 
     public async Task RemoveRelationshipAsync(int personId, int relatedPersonId)

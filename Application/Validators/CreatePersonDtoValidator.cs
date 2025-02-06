@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Localization;
 using PersonalDataDirectory.Dto.Person;
 
 namespace PersonalDataDirectory.Application.Validators;
@@ -9,23 +10,28 @@ public class CreatePersonDtoValidator : AbstractValidator<CreatePersonDto>
     {
         RuleFor(p => p.FirstName)
             .Cascade(CascadeMode.Stop)
-            .NotEmpty().WithMessage("First Name is required.")
-            .Matches("^[ა-ჰ]+$|^[A-Za-z]+$").WithMessage("Only Georgian or Latin letters allowed, but not both together.")
-            .MinimumLength(2).MaximumLength(50);
+            .NotEmpty()
+            .Matches("^[ა-ჰ]+$|^[A-Za-z]+$")
+            .WithMessage("Only Georgian or Latin letters allowed, but not both together.")
+            .MinimumLength(2)
+            .MaximumLength(50);
 
         RuleFor(p => p.LastName)
             .Cascade(CascadeMode.Stop)
-            .NotEmpty().WithMessage("Last Name is required.")
-            .Matches("^[ა-ჰ]+$|^[A-Za-z]+$").WithMessage("Only Georgian or Latin letters allowed, but not both together.")
-            .MinimumLength(2).MaximumLength(50);
+            .NotEmpty()
+            .Matches("^[ა-ჰ]+$|^[A-Za-z]+$")
+            .WithMessage("Only Georgian or Latin letters allowed, but not both together.")
+            .MinimumLength(2)
+            .MaximumLength(50);
 
         RuleFor(p => p.PersonalNumber)
-            .NotEmpty().WithMessage("Personal Number is required.")
-            .Matches("^[0-9]{11}$").WithMessage("Personal number must be exactly 11 DIGITS.");
+            .NotEmpty()
+            .Length(11)
+            .Matches("^[0-9]{11}$")
+            .WithMessage("Personal Number must only contain digits.");
 
         RuleFor(p => p.DateOfBirth)
-            .Must(date => date <= DateTime.Today.AddYears(-18))
-            .WithMessage("Person must be at least 18 years old.");
+            .LessThan(DateTime.Today.AddYears(-18));
 
         RuleFor(p => p.PhoneNumbers)
             .Cascade(CascadeMode.Stop)
